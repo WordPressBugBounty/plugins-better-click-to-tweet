@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Better Click To Tweet
  * Description: Add styled boxes to posts and pages so that readers can share your content on X. Increase engagement by asking for it. All the features of a premium plugin, for FREE!
- * Version: 5.13.0
+ * Version: 5.14.0
  * Author: Ben Meredith
  * Author URI: https://www.betterclicktotweet.com
  * Plugin URI: https://wordpress.org/plugins/better-click-to-tweet/
@@ -12,24 +12,40 @@
 
 defined( 'ABSPATH' ) or die( "No soup for you. You leave now." );
 
-define ( 'BCTT_VERSION', '5.13.0' );
+define ( 'BCTT_VERSION', '5.14.0' );
 
-include 'i18n-module.php';
-include 'bctt-admin.php';
-include 'bctt_options.php';
+// Include files that don't use translation functions early
 include 'bctt-i18n.php';
-include 'admin-nags.php';
 
-// @since 5.7.0
-include 'includes/updater/bctt-updater.php';
-include 'includes/updater/license-page.php';
-include 'includes/misc-functions.php';
-include 'bctt-welcome-functions.php';
+// Initialize the plugin after translations are loaded
+add_action( 'init', 'bctt_init', 0 );
+
+function bctt_init() {
+    // Include all plugin files after translations are loaded
+    include 'i18n-module.php';
+    include 'bctt-admin.php';
+    include 'bctt_options.php';
+    include 'admin-nags.php';
+
+    // @since 5.7.0
+    include 'includes/updater/bctt-updater.php';
+    include 'includes/updater/license-page.php';
+    include 'includes/misc-functions.php';
+    include 'bctt-welcome-functions.php';
+
+    // Register shortcode after translations are loaded
+    add_shortcode( 'bctt', 'bctt_shortcode' );
+
+    // Register block after translations are loaded
+    if ( function_exists( 'register_block_type' ) ) {
+        require_once( plugin_dir_path( __FILE__ ) . 'assets/block/init.php' );
+    }
+}
 
 /*
-*  	Strips the html, shortens the text (after checking for mb_internal_encoding compatibility) 
+*  	Strips the html, shortens the text (after checking for mb_internal_encoding compatibility)
 *	and adds an ellipsis if the text has been shortened
-* 
+*
 * 	@param string $input raw text string from the shortcode
 * 	@param int $length length for truncation
 * 	@param bool $ellipsis boolean for whether the text has been truncated
@@ -88,7 +104,7 @@ function bctt_shorten( $input, $length, $ellipsis = true, $strip_html = true ) {
 *
 * 	@since 0.1
 * 	@param array $atts an array of shortcode attributes
-*	
+*
 */
 
 function bctt_shortcode( $atts ) {
@@ -207,8 +223,6 @@ function bctt_shortcode( $atts ) {
 	}
 	return apply_filters( 'bctt_output', $output, $short, $bctt_button_span_class, $bctt_span_class, $bctt_text_span_class, $href, $rel, $atts );
 }
-
-add_shortcode( 'bctt', 'bctt_shortcode' );
 
 /*
  * Load the stylesheet to style the output.
@@ -356,11 +370,4 @@ function bctt_options_link( $links ) {
 $bcttlink = plugin_basename( __FILE__ );
 add_filter( "plugin_action_links_$bcttlink", 'bctt_options_link' );
 
-/**
- * Register Block
- */
-add_action( 'plugins_loaded', function () {
-	if ( function_exists( 'register_block_type' ) ) {
-		require_once( plugin_dir_path( __FILE__ ) . 'assets/block/init.php' );
-	}
-} );
+
