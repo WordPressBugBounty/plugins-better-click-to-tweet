@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Better Click To Tweet
  * Description: Add styled boxes to posts and pages so that readers can share your content on X. Increase engagement by asking for it. All the features of a premium plugin, for FREE!
- * Version: 5.14.0
+ * Version: 5.15.0 
  * Author: Ben Meredith
  * Author URI: https://www.betterclicktotweet.com
  * Plugin URI: https://wordpress.org/plugins/better-click-to-tweet/
@@ -12,7 +12,8 @@
 
 defined( 'ABSPATH' ) or die( "No soup for you. You leave now." );
 
-define ( 'BCTT_VERSION', '5.14.0' );
+define( 'BCTT_VERSION', '5.15.0' );
+define( 'BCTT_PLUGIN_FILE', __FILE__ );
 
 // Include files that don't use translation functions early
 include 'bctt-i18n.php';
@@ -40,7 +41,84 @@ function bctt_init() {
     if ( function_exists( 'register_block_type' ) ) {
         require_once( plugin_dir_path( __FILE__ ) . 'assets/block/init.php' );
     }
+
+    // WordPress 6.9+ Abilities API: register bctt/insert-click-to-tweet and bctt/suggest-tweetables.
+    // Only load when the API exists so we do not break sites on older WordPress versions.
+    if ( function_exists( 'wp_register_ability' ) ) {
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-bctt-abilities.php';
+    }
 }
+
+/**
+ * Checks whether any WordPress Connectors LLM (e.g. Gemini, OpenAI, Claude) is connected.
+ *
+ * Used to decide whether to use AI for suggest-tweetables and to show the "Connect a model" prompt.
+ *
+ * @since 6.0.0
+ * @return bool True if at least one connector provider is configured.
+ */
+function bctt_has_llm_connector() {
+	if ( ! class_exists( '\WordPress\AiClient\AiClient' ) ) {
+		return false;
+	}
+	try {
+		$registry = \WordPress\AiClient\AiClient::defaultRegistry();
+		$provider_ids = array( 'google', 'openai', 'anthropic' );
+		foreach ( $provider_ids as $id ) {
+			if ( $registry->hasProvider( $id ) && $registry->isProviderConfigured( $id ) ) {
+				return true;
+			}
+		}
+	} catch ( Exception $e ) {
+		return false;
+	}
+	return false;
+}
+
+/**
+ * REST API: Connector usage agreement (for "Connect to AI" CTA when no connector is connected).
+ *
+ * @since 6.0.0
+ */
+function bctt_rest_register_connector_agreement() {
+	register_rest_route(
+		'bctt/v1',
+		'/connector-agreement',
+		array(
+			array(
+				'methods'             => 'GET',
+				'callback'            => function () {
+					return array(
+						'agreed' => (bool) get_option( 'bctt_connector_usage_agreed', false ),
+					);
+				},
+				'permission_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			),
+			array(
+				'methods'             => 'POST',
+				'callback'            => function ( $request ) {
+					$agreed = (bool) $request->get_param( 'agreed' );
+					update_option( 'bctt_connector_usage_agreed', $agreed ? '1' : '0' );
+					return array(
+						'agreed' => (bool) get_option( 'bctt_connector_usage_agreed', false ),
+					);
+				},
+				'permission_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+				'args'                => array(
+					'agreed' => array(
+						'type'    => 'boolean',
+						'default' => false,
+					),
+				),
+			),
+		)
+	);
+}
+add_action( 'rest_api_init', 'bctt_rest_register_connector_agreement' );
 
 /*
 *  	Strips the html, shortens the text (after checking for mb_internal_encoding compatibility)
