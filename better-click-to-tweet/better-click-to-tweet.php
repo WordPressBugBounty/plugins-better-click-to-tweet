@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Better Click To Tweet
+ * Plugin Name: Better Click To Share (Formerly Better Click To Tweet)
  * Description: Add styled boxes to posts and pages so that readers can share your content on X. Increase engagement by asking for it. All the features of a premium plugin, for FREE!
- * Version: 5.15.1
+ * Version: 6.0.0
  * Author: Ben Meredith
- * Author URI: https://www.betterclicktotweet.com
+ * Author URI: https://www.betterclicktoshare.com
  * Plugin URI: https://wordpress.org/plugins/better-click-to-tweet/
  * License: GPL2
  * Text Domain: better-click-to-tweet
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) or die( "No soup for you. You leave now." );
 
-define( 'BCTT_VERSION', '5.15.1' );
+define( 'BCTT_VERSION', '6.0.0' );
 define( 'BCTT_PLUGIN_FILE', __FILE__ );
 
 // Load updater at plugin load so BCTT_License exists before add-ons' plugins_loaded callbacks.
@@ -293,7 +293,7 @@ function bctt_shortcode( $atts ) {
 		'text'    => rawurlencode( html_entity_decode( $short ) ),
 		'via'     => $via,
 		'related' => $related,
-	), 'https://twitter.com/intent/tweet' );
+	), 'https://x.com/intent/tweet' );
 
 	if ( ! is_feed() ) {
 
@@ -441,7 +441,7 @@ function bctt_options_link( $links ) {
 
 	$settingsText = sprintf( _x( 'Settings', 'text for the link on the plugins page', 'better-click-to-tweet' ) );
 
-	$settings_link = '<a href="admin.php?page=better-click-to-tweet">' . esc_html( $settingsText ) . '</a>';
+	$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=better-click-to-tweet' ) ) . '">' . esc_html( $settingsText ) . '</a>';
 
 	array_unshift( $links, $settings_link );
 

@@ -6,7 +6,7 @@
                 </p>
                 
                 <p class="mb-4">
-                    <?php _e( 'Since launching Better Click To Tweet in 2014, I\'ve seen thousands of folks use the plugin, and some patterns started to emerge. Some would get one or two shares while others got hundreds or even thousands of clicks. I started to isolate what made the difference.', 'better-click-to-tweet')  ?>
+                    <?php _e( 'Since launching Better Click To Share (formerly Better Click To Tweet) in 2014, I\'ve seen thousands of folks use the plugin, and some patterns started to emerge. Some would get one or two shares while others got hundreds or even thousands of clicks. I started to isolate what made the difference.', 'better-click-to-tweet')  ?>
                 </p>
 
                 <div class="border border-solid border-blue-200 bg-blue-100 p-4 rounded flex justify-center my-12">
@@ -19,7 +19,7 @@
                     </svg>
                     <a 
                         class="text-sm font-bold text-blue-500" 
-                        href="https://www.wpsteward.com/2019/06/why-arent-my-posts-being-shared-on-social-media/">
+                        href="https://benlikes.us/bcts-blogpost">
                             <?php _e( 'Here\'s a splash of cold water to the face regarding your content', 'better-click-to-tweet' )?>
                     </a>
                  </div>

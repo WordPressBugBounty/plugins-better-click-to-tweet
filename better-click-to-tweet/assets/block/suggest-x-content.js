@@ -2,19 +2,17 @@
  * Post sidebar: "Suggest X Content" button.
  *
  * Uses the BCTT abilities: suggest-tweetables (get suggestions) then inserts
- * the first suggestion as a Better Click to Tweet block at the end of the post.
+ * the first suggestion as a Better Click To Share block at the end of the post.
  * Auth: cookie + nonce (wp.apiFetch); no Application Password in code.
  */
 (function () {
 	'use strict';
 
-	// Prefer wp.editor (WP 6.6+); fallback to wp.editPost for older WP.
+	// Use wp.editor (WP 6.6+). We do not load wp.editPost to avoid deprecation notices.
 	var PluginDocumentSettingPanel =
 		typeof wp !== 'undefined' && wp.editor && wp.editor.PluginDocumentSettingPanel
 			? wp.editor.PluginDocumentSettingPanel
-			: typeof wp !== 'undefined' && wp.editPost && wp.editPost.PluginDocumentSettingPanel
-				? wp.editPost.PluginDocumentSettingPanel
-				: null;
+			: null;
 
 	if (typeof wp === 'undefined' || !wp.plugins || !PluginDocumentSettingPanel) {
 		return;
@@ -23,6 +21,7 @@
 	var registerPlugin = wp.plugins.registerPlugin;
 	var Button = wp.components.Button;
 	var CheckboxControl = wp.components.CheckboxControl;
+	var Notice = wp.components.Notice;
 	var el = wp.element.createElement;
 	var createInterpolateElement = wp.element.createInterpolateElement;
 	var __ = wp.i18n.__;
@@ -68,6 +67,9 @@
 		var agreed = agreedState[0];
 		var setAgreed = agreedState[1];
 		var canUseAi = config.hasLlm && (config.connectorUsageAgreed || agreed);
+		var noticeState = useState('');
+		var noticeMessage = noticeState[0];
+		var setNoticeMessage = noticeState[1];
 
 		var postId = useSelect(function (sel) {
 			return sel('core/editor') && sel('core/editor').getCurrentPostId();
@@ -90,6 +92,7 @@
 			if (!postId || isBusy) return;
 
 			setBusy(true);
+			setNoticeMessage('');
 
 			apiFetch({
 				method: 'POST',
@@ -98,25 +101,39 @@
 			})
 				.then(function (suggestions) {
 					if (!Array.isArray(suggestions) || suggestions.length === 0) {
-						// eslint-disable-next-line no-console
-						console.warn('BCTT: No tweetable suggestions returned.');
+						setNoticeMessage(__('No shareable snippets found. Save the post as a draft first, or add more content.', 'better-click-to-tweet'));
 						return;
 					}
 					var first = suggestions[0];
 					var text = first && first.text;
-					if (!text) return;
+					if (!text) {
+						setNoticeMessage(__('No shareable snippets found. Save the post as a draft first, or add more content.', 'better-click-to-tweet'));
+						return;
+					}
 
-					var blockEditor = select('core/block-editor');
-					var currentBlocks = (blockEditor && blockEditor.getBlocks && blockEditor.getBlocks()) || [];
+					var blockEditorSelect = select('core/block-editor');
+					var blockEditorDispatch = dispatch('core/block-editor');
+					var currentBlocks = (blockEditorSelect && blockEditorSelect.getBlocks && blockEditorSelect.getBlocks()) || [];
 					var newBlock = createBlock('bctt/clicktotweet', { tweet: text });
-					var allBlocks = currentBlocks.concat([newBlock]);
-					var content = serialize(allBlocks);
-					var editorDispatch = dispatch('core/editor');
-					if (editorDispatch && editorDispatch.editPost) {
-						editorDispatch.editPost({ content: content });
+
+					// Prefer insertBlocks so the block appears immediately in the editor (avoids first-click no-show in some WP/editor versions).
+					if (blockEditorDispatch && blockEditorDispatch.insertBlocks) {
+						blockEditorDispatch.insertBlocks([newBlock], currentBlocks.length);
+					} else {
+						var allBlocks = currentBlocks.concat([newBlock]);
+						var content = serialize(allBlocks);
+						var editorDispatch = dispatch('core/editor');
+						if (editorDispatch && editorDispatch.editPost) {
+							editorDispatch.editPost({ content: content });
+						}
 					}
 				})
 				.catch(function (err) {
+					var msg = (err && err.message) ? err.message : __('Something went wrong. Save the post as a draft first and try again.', 'better-click-to-tweet');
+					if (err && err.code === 'bctt_no_content') {
+						msg = err.message;
+					}
+					setNoticeMessage(msg);
 					// eslint-disable-next-line no-console
 					console.error('BCTT Suggest X Content:', err);
 				})
@@ -135,6 +152,33 @@
 			el(
 				'div',
 				{ className: 'bctt-suggest-x-content-panel' },
+				noticeMessage
+					? el(
+							'div',
+							{ style: { marginTop: '4px', marginBottom: '16px' } },
+							el(
+								Notice,
+								{
+									status: 'warning',
+									isDismissible: true,
+									onRemove: function () { setNoticeMessage(''); },
+								},
+								noticeMessage
+							)
+						)
+					: null,
+				el(
+					Button,
+					{
+						variant: 'secondary',
+						className: 'is-full-width',
+						isBusy: isBusy,
+						disabled: isBusy || !postId,
+						onClick: function () { runSuggestAndInsert(false); },
+						style: { width: '100%', justifyContent: 'center', marginBottom: canUseAi ? '12px' : 0 },
+					},
+					__('Add Suggested Content (from post)', 'better-click-to-tweet')
+				),
 				canUseAi
 					? el(
 							'div',
@@ -158,7 +202,7 @@
 									style: { marginTop: '4px', marginBottom: 0 },
 								},
 								createInterpolateElement(
-									__('NOTE: Using the above button may incur usage charges from your <link>Connected AI model</link>. Better Click to Tweet is not responsible for any charges.', 'better-click-to-tweet'),
+									__('NOTE: Using the above button may incur usage charges from your <link>Connected AI model</link>. Better Click To Share is not responsible for any charges.', 'better-click-to-tweet'),
 									{
 										link: el('a', {
 											href: config.connectorsUrl,
@@ -189,22 +233,6 @@
 								: null
 						)
 					: null,
-				el(
-					Button,
-					{
-						variant: canUseAi ? 'tertiary' : 'secondary',
-						className: 'is-full-width',
-						isBusy: isBusy,
-						disabled: isBusy || !postId,
-						onClick: function () { runSuggestAndInsert(false); },
-						style: {
-							width: '100%',
-							justifyContent: 'center',
-							marginTop: canUseAi ? '8px' : 0,
-						},
-					},
-					__('Add Suggested Content (from post)', 'better-click-to-tweet')
-				),
 				// Agreement / connect block: not connected and can connect, or connected but not yet agreed
 				(!config.hasLlm && config.userCanConnect && config.connectorsUrl)
 					? el(
@@ -229,7 +257,7 @@
 								},
 								createInterpolateElement(
 									__(
-										'Better Click To Tweet can leverage that with "Bill" (the cheeky name we\'ve given our AI assistant) as a Senior Social Media Marketer. Once you connect your provider on the <link>Connectors</link> page, Bill will read your post, suggest an engaging post for X using your connected AI model, and insert it into the post for your readers to click!',
+										'Better Click To Share can leverage that with "Bill" (the cheeky name we\'ve given our AI assistant) as a Senior Social Media Marketer. Once you connect your provider on the <link>Connectors</link> page, Bill will read your post, suggest an engaging post for X using your connected AI model, and insert it into the post for your readers to click!',
 										'better-click-to-tweet'
 									),
 									{
@@ -292,7 +320,7 @@
 										style: { marginBottom: '8px' },
 									},
 									__(
-										'A model is already connected. To use Bill\'s AI suggestions, please confirm that you accept responsibility for usage charges. Usage charges from your connected model apply all post editors on your site.',
+										'A model is already connected and ready to use on this site. To use AI suggestions, please confirm that you accept responsibility for usage charges. Usage charges from your connected model apply all users who have post editing access on your site.',
 										'better-click-to-tweet'
 									)
 								),
@@ -300,7 +328,7 @@
 									CheckboxControl,
 									{
 										label: __(
-											'By checking this box, you agree that the decision of which AI/LLM model you connect to and any charges incurred from that model are solely your responsibility and you will not hold Better Click to Tweet responsible for any usage charges.',
+											'By checking this box, you agree that the decision of which AI/LLM model you connect to and any charges incurred from that model are solely your responsibility and you will not hold Better Click To Share responsible for any usage charges.',
 											'better-click-to-tweet'
 										),
 										checked: agreed,

@@ -76,19 +76,19 @@ function bctt_alerts() {
 				echo esc_url( admin_url( $nag_admin_dismiss_url ) ); ?>" class="dismiss bctt-addon-nag-dismiss">Dismiss this <span
 						class="dashicons dashicons-dismiss"></span></a>
 				<h3
-					class="bctt-addon-nag-header"><?php esc_html_e( 'Add Premium Style to your Better Click To Tweet boxes!', 'better-click-to-tweet' ) ?></h3>
+					class="bctt-addon-nag-header"><?php esc_html_e( 'Add Premium Style to your Better Click To Share boxes!', 'better-click-to-tweet' ) ?></h3>
 
-				<a href="http://benlikes.us/bcttnag"
+				<a href="https://benlikes.us/bcttnag"
 				   target="_blank" rel="noopener noreferrer"><img class="bctt-nag-photo" src="<?php echo esc_url( plugins_url() . '/better-click-to-tweet/assets/img/premium_style.png' ); ?>"/></a>
 
-				<p class="bctt-addon-nag-copy"><?php esc_attr_e( 'Choose from multiple options when styling your Better Click To Tweet boxes, with no code.', 'better-click-to-tweet' ) ?></p>
+				<p class="bctt-addon-nag-copy"><?php esc_attr_e( 'Choose from multiple options when styling your Better Click To Share boxes, with no code.', 'better-click-to-tweet' ) ?></p>
 				<ul class="bctt-addon-nag-list">
-					<li><?php esc_html_e( 'Make your Better Click To Tweet boxes stand out.', 'better-click-to-tweet' ) ?></li>
+					<li><?php esc_html_e( 'Make your Better Click To Share boxes stand out.', 'better-click-to-tweet' ) ?></li>
 					<li><?php esc_html_e( 'Get more engagement!', 'better-click-to-tweet' ) ?></li>
-					<li><?php esc_html_e( 'Support the development of Better Click To Tweet!', 'better-click-to-tweet' ) ?></li>
+					<li><?php esc_html_e( 'Support the development of Better Click To Share!', 'better-click-to-tweet' ) ?></li>
 				</ul>
 				<p class="bctt-addon-nag-copy">
-					<a class="bctt-nag-purchase-link" href="http://benlikes.us/bcttnag"
+					<a class="bctt-nag-purchase-link" href="https://benlikes.us/bcttnag"
 					   target="_blank"><?php esc_html_e( 'Purchase it today', 'better-click-to-tweet' ) ?></a> <?php esc_html_e( 'Save 8% with the code NAGSareTHEbest', 'better-click-to-tweet') ?></p>
 			</div>
 			<?php
@@ -104,7 +104,7 @@ function bctt_addon_notice_ignore() {
 
 	/**
 	 * If user clicks to ignore the notice, add that to their user meta the banner then checks whether this tag exists already or not.
-	 * See here: http://codex.wordpress.org/Function_Reference/add_user_meta
+	 * See here: https://benlikes.us/bcts-codex
 	 */
 
 	if ( isset( $_GET['bctt_has_dismissed_nag'] ) && '0' == $_GET['bctt_has_dismissed_nag'] ) {
@@ -197,9 +197,9 @@ function bctt_more_alerts() {
 		echo esc_url( admin_url( $nag_admin_dismiss_url ) ); ?>" class="dismiss bctt-more-addon-nag-dismiss">Dismiss this <span
                     class="dashicons dashicons-dismiss"></span></a>
         <h3
-                class="bctt-more-addon-nag-header"><?php esc_html_e( 'NEW: Track how well your Better Click To Tweets are performing!', 'better-click-to-tweet' ) ?></h3>
+                class="bctt-more-addon-nag-header"><?php esc_html_e( 'NEW: Track how well your Better Click To Share boxes are performing!', 'better-click-to-tweet' ) ?></h3>
 
-        <a href="http://benlikes.us/bcttutmnag"
+        <a href="https://benlikes.us/bcttutmnag"
            target="_blank" rel="noopener noreferrer"><img class="bctt-nag-photo" src="<?php echo esc_url( plugins_url() . '/better-click-to-tweet/assets/img/utm-tags.jpg' ); ?>"/></a>
 
         <p class="bctt-more-addon-nag-copy"><?php esc_attr_e( 'Add UTM Codes to the URL that readers on X use to click back to your site!', 'better-click-to-tweet' ) ?></p>
@@ -209,7 +209,7 @@ function bctt_more_alerts() {
             <li><?php esc_html_e( 'Works with the block editor and with shortcodes.', 'better-click-to-tweet' ) ?></li>
         </ul>
         <p class="bctt-more-addon-nag-copy">
-            <a class="bctt-more-nag-purchase-link" href="http://benlikes.us/bcttutmnag"
+            <a class="bctt-more-nag-purchase-link" href="https://benlikes.us/bcttutmnag"
                target="_blank"><?php esc_html_e( 'Purchase it today', 'better-click-to-tweet' ) ?></a> <?php esc_html_e( 'Save 8% with the code NAGSareTHEbest', 'better-click-to-tweet') ?></p>
         </div>
 		<?php
@@ -224,7 +224,7 @@ function bctt_more_addon_notice_ignore() {
 
 	/**
 	 * If user clicks to ignore the notice, add that to their user meta the banner then checks whether this tag exists already or not.
-	 * See here: http://codex.wordpress.org/Function_Reference/add_user_meta
+	 * See here: https://benlikes.us/bcts-codex
 	 */
 
 	if ( isset( $_GET['bctt_has_dismissed_utm_nag'] ) && '0' == $_GET['bctt_has_dismissed_utm_nag'] ) {
